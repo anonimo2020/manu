@@ -75,7 +75,7 @@ CRISIS = (
 hits = defaultdict(deque)
 
 
-def limitado(ip, maximo=30, ventana=3600):
+def limitado(ip, maximo=60, ventana=3600):
     q, ahora = hits[ip], time.time()
     while q and ahora - q[0] > ventana:
         q.popleft()
