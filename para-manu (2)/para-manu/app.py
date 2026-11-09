@@ -3,10 +3,24 @@ from collections import defaultdict, deque
 
 import requests
 from flask import Flask, jsonify, render_template, request
+from flask_cors import CORS
 
 from prompt import SYSTEM_PROMPT
 
 app = Flask(__name__)
+CORS(
+    app,
+    resources={
+        r"/api/.*": {
+            "origins": [
+                "http://honey.gt.tc",
+                "https://honey.gt.tc"
+            ]
+        }
+    },
+    methods=["POST", "OPTIONS"],
+    allow_headers=["Content-Type"]
+)
 BASE = os.path.dirname(__file__)
 MENSAJES = json.load(open(os.path.join(BASE, "frases_pequena_manu_2000.json"), encoding="utf-8"))["messages"]
 CRISIS_RESP = json.load(open(os.path.join(BASE, "crisis.json"), encoding="utf-8"))["crisis"]
