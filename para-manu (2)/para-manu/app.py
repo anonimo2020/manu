@@ -45,6 +45,9 @@ RESPALDO = {
     "general": ["carino", "amor"],
 }
 
+# Venice es el proveedor principal; Gemini y Groq quedan como respaldos.
+VENICE_KEY = os.environ.get("VENICE_INFERENCE_KEY")
+VENICE_MODEL = os.environ.get("VENICE_MODEL", "venice-uncensored")
 GEMINI_KEY = os.environ.get("GEMINI_API_KEY")
 GROQ_KEY = os.environ.get("GROQ_API_KEY")
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
@@ -64,8 +67,7 @@ EMOCIONES = {
     "extrano": r"\b(?:te extrano|te echo de menos|echo de menos|me haces falta|me hace falta)\b",
     "feliz": r"\b(?:feliz|felices|content[ao]s?|alegre|alegria|genial|emocionad[ao]|increible|bien)\b",
 }
-# Frases de riesgo: se revisan ANTES de la IA y del límite de uso. Es mejor
-# pasarse de cuidadosa que quedarse corta.
+# Frases de riesgo: se revisan ANTES de la IA y del límite de uso.
 CRISIS = (
     r"\b(?:suicid\w*|quitarme la vida|quiero morir(?:me)?|quisiera morir(?:me)?|me quiero matar|matarme"
     r"|no quiero (?:seguir )?viviendo|ya no quiero vivir|no quiero seguir (?:aqui|asi|con (?:esto|todo))"
@@ -112,6 +114,26 @@ def frase_de_respaldo(texto, previas=()):
         emo = next((e for e, patron in EMOCIONES.items() if re.search(patron, t)), "general")
     m, _ = elegir(RESPALDO[emo], previas=previas)
     return m["message"] + (f"\n\n{m['follow_up']}" if m["follow_up"] else "")
+
+
+def venice(msgs):
+    chat = [{"role": "system", "content": SYSTEM_PROMPT}] + [
+        {"role": "user" if m["role"] == "user" else "assistant", "content": m["text"]}
+        for m in msgs
+    ]
+    r = requests.post(
+        "https://api.venice.ai/api/v1/chat/completions",
+        headers={"Authorization": f"Bearer {VENICE_KEY}", "Content-Type": "application/json"},
+        json={
+            "model": VENICE_MODEL,
+            "messages": chat,
+            "temperature": 0.9,
+            "max_tokens": 300
+        },
+        timeout=25,
+    )
+    r.raise_for_status()
+    return r.json()["choices"][0]["message"]["content"].strip()
 
 
 def gemini(msgs):
@@ -178,7 +200,13 @@ def chat():
         return jsonify(respuesta=random.choice(CRISIS_RESP), origen="crisis")
     if limitado(request.headers.get("X-Forwarded-For", request.remote_addr)):
         return jsonify(respuesta="Descansa un ratito y me cuentas más luego, ¿sí?", origen="limite")
-    for nombre, clave, fn in (("gemini", GEMINI_KEY, gemini), ("groq", GROQ_KEY, groq)):
+
+    # Orden de proveedores: Venice -> Gemini -> Groq -> frases locales.
+    for nombre, clave, fn in (
+        ("venice", VENICE_KEY, venice),
+        ("gemini", GEMINI_KEY, gemini),
+        ("groq", GROQ_KEY, groq),
+    ):
         if clave:
             try:
                 return jsonify(respuesta=fn(msgs), origen=nombre)
