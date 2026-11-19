@@ -5,9 +5,13 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
     envVars:
-      - key: VENICE_INFERENCE_KEY
+      - key: VENICE_API_KEY
         sync: false
+      - key: VENICE_MODEL
+        value: zai-org-glm-5-2
       - key: GEMINI_API_KEY
         sync: false
       - key: GROQ_API_KEY
         sync: false
+      - key: GROQ_MODEL
+        value: lopenai/gpt-oss-120b
