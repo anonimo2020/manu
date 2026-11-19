@@ -2,3 +2,4 @@ flask
 gunicorn
 requests
 flask-cors
+python-dotenv
