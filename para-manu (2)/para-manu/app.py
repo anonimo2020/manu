@@ -2,10 +2,14 @@ import json, os, random, re, time, unicodedata
 from collections import defaultdict, deque
 
 import requests
+from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
 
 from prompt import SYSTEM_PROMPT
+
+# Carga .env local si existe; en Render se usan variables Environment.
+load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
 app = Flask(__name__)
 CORS(
@@ -46,8 +50,8 @@ RESPALDO = {
 }
 
 # Venice es el proveedor principal; Gemini y Groq quedan como respaldos.
-VENICE_KEY = os.environ.get("VENICE_INFERENCE_KEY")
-VENICE_MODEL = os.environ.get("VENICE_MODEL", "venice-uncensored")
+VENICE_KEY = os.environ.get("VENICE_API_KEY")
+VENICE_MODEL = os.environ.get("VENICE_MODEL", "zai-org-glm-5-2")
 GEMINI_KEY = os.environ.get("GEMINI_API_KEY")
 GROQ_KEY = os.environ.get("GROQ_API_KEY")
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
