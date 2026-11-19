@@ -55,7 +55,7 @@ VENICE_MODEL = os.environ.get("VENICE_MODEL", "zai-org-glm-5-2")
 GEMINI_KEY = os.environ.get("GEMINI_API_KEY")
 GROQ_KEY = os.environ.get("GROQ_API_KEY")
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
-GROQ_MODEL = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
+GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
 
 # Los patrones se aplican sobre texto sin tildes ni mayúsculas (ver normalizar).
 # Todos llevan \b al inicio y al final para no coincidir dentro de otras palabras
